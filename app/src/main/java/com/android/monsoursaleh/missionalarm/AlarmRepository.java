@@ -8,6 +8,7 @@ import android.content.Intent;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import java.util.Date;
 import java.util.List;
 
 public class AlarmRepository {
@@ -40,18 +41,6 @@ public class AlarmRepository {
         mDatabase.alarmDao().putAlarm(alarm);
     }
 
-    // Get all alarm times.
-    public LiveData<List<AlarmTime>> getAlarmTimes() {
-        return mDatabase.alarmDao().getAlarmTimes();
-    }
-
-    public LiveData<AlarmTime> getAlarmTime(int id) {
-        return mDatabase.alarmDao().getAlarmTimeInfo(id);
-    }
-
-    public LiveData<List<AlarmDay>> getAlarmDays() {
-        return mDatabase.alarmDao().getAlarmDays();
-    }
 
     public LiveData<List<String>> getDays(int id) {
         return mDatabase.alarmDao().getDays(id);
@@ -62,20 +51,8 @@ public class AlarmRepository {
         mDatabase.alarmDao().deleteAlarm(alarm);
     }
 
-    public void changeName(String name, int id) {
-        mDatabase.alarmDao().changeName(name, id);
-    }
-
-    public void changeSound(String sound, int id) {
-        mDatabase.alarmDao().changeSound(sound, id);
-    }
-
-    public void changeSnooze(boolean isSnooze, int id) {
-        mDatabase.alarmDao().changeSnooze(isSnooze, id);
-    }
-
-    public void changeVibrate(boolean isVibrate, int id) {
-        mDatabase.alarmDao().changeVibrate(isVibrate, id);
+    public LiveData<List<String>> getAllDays() {
+        return mDatabase.alarmDao().getAllDays();
     }
 
 
@@ -83,16 +60,14 @@ public class AlarmRepository {
         return mDatabase.alarmDao().getAlarm(name);
     }
 
-    public void putAlarmTime(AlarmTime time) {
-        mDatabase.alarmDao().putAlarmTime(time);
-    }
 
     public void putAlarmDay(AlarmDay day) {
         mDatabase.alarmDao().putAlarmDay(day);
     }
 
-    public void deleteAlarmDay(AlarmDay day) {
-        mDatabase.alarmDao().deleteAlarmDay(day);
+
+    public void deleteDay(int id, String day) {
+        mDatabase.alarmDao().deleteDay(id, day);
     }
 
 }

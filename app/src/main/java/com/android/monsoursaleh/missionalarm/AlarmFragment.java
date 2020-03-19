@@ -1,6 +1,7 @@
 package com.android.monsoursaleh.missionalarm;
 
 import android.content.Intent;
+import android.content.MutableContextWrapper;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
@@ -18,6 +19,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelProviders;
@@ -29,11 +32,12 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 public class AlarmFragment extends Fragment {
     private static final int REQUEST_ALARM_SOUND = 0;
     private static final String ARG_ALARM_NAME = "ARG_ALARM_NAME";
-    private Alarm mAlarm;
+    private Alarm alarm;
     private boolean isNewAlarm = false;
     private AlarmsViewModel mViewModel;
     private TimePicker mTime;
@@ -60,11 +64,11 @@ public class AlarmFragment extends Fragment {
         // If an existing alarm was clicked from the list.
         if (getArguments() != null) {
             // Get the alarm that was clicked.
-            mAlarm = mViewModel.getAlarm(getArguments().getString(ARG_ALARM_NAME)).getValue();
+            alarm = mViewModel.getAlarm(getArguments().getString(ARG_ALARM_NAME)).getValue();
         } else {
             // Create new Alarm object.
-            mAlarm = new Alarm();
             isNewAlarm = true;
+            alarm = new Alarm();
         }
     }
 
@@ -87,7 +91,7 @@ public class AlarmFragment extends Fragment {
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         // Save state of fragment before activity is destroyed.
-        outState.putString(ARG_ALARM_NAME, mAlarm.getName());
+        outState.putString(ARG_ALARM_NAME, alarm.getName());
         super.onSaveInstanceState(outState);
     }
 
@@ -125,7 +129,7 @@ public class AlarmFragment extends Fragment {
             chip.setLayoutParams(lp);
             chip.setClickable(true);
             chip.setCheckable(true);
-            chip.setChecked(isNewAlarm || mViewModel.getDays(mAlarm.getId()).getValue()
+            chip.setChecked(isNewAlarm || mViewModel.getDays(alarm.getId()).getValue()
                     .contains(day.substring(0, 3)));
             chip.setCheckedIconVisible(false);
             chip.setChipBackgroundColor(getResources()
@@ -134,16 +138,20 @@ public class AlarmFragment extends Fragment {
         }
 
         // Set state of UI elements.
-        mAlarmSound.setText(mAlarm.getAlarmSound());
-        mToggleSnooze.setChecked(mAlarm.isSnooze());
-        mToggleVibrate.setChecked(mAlarm.isVibrate());
-        mName.setText(mAlarm.getName());
+        mAlarmSound.setText(alarm.getAlarmSound());
+        mToggleSnooze.setChecked(alarm.isSnooze());
+        mToggleVibrate.setChecked(alarm.isVibrate());
+        mName.setText(alarm.getName());
 
+        // Instantiate calendar object.
         Calendar time = Calendar.getInstance();
-        AlarmTime alarm = mViewModel.getAlarmTime(mAlarm.getId()).getValue();
-        time.set(Calendar.HOUR, isNewAlarm ? time.get(Calendar.HOUR): alarm.getHour());
-        time.set(Calendar.MINUTE, isNewAlarm ? time.get(Calendar.MINUTE): alarm.getMinute());
 
+        // If alarm is not new, use stored alarm time.
+        if (!isNewAlarm) {
+            time.setTime(alarm.getTime());
+        }
+
+        // Runs different method depending on SDk version.
         if (Build.VERSION.SDK_INT < 23) {
             mTime.setCurrentHour(time.get(Calendar.HOUR_OF_DAY));
             mTime.setCurrentMinute(time.get(Calendar.MINUTE));
@@ -168,18 +176,18 @@ public class AlarmFragment extends Fragment {
                 /* save alarm to database and
                 go back to previous activity.
                  */
-                mAlarm.setName(mName.getText().toString());
-                updateAlarmDays();
-                updateAlarmTime();
-                if (isNewAlarm) {
-                    mViewModel.addAlarm(mAlarm);
+                alarm.setName(mName.getText().toString());
 
+                // Do database operations in separate thread.
+                new Thread(new Runnable() {
+                   @Override
+                   public void run() {
+                       updateAlarmDays();
+                       mViewModel.saveAlarm(alarm);
+                   }
+               }).start();
 
-                } else {
-                    mViewModel.saveAlarm(mAlarm);
-                }
-                exitFragment();
-
+               exitFragment();
             }
         });
 
@@ -187,7 +195,14 @@ public class AlarmFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 // Delete alarm from database.
-                mViewModel.deleteAlarm(mAlarm);
+                if (!isNewAlarm) {
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mViewModel.deleteAlarm(alarm);
+                        }
+                    }).start();
+                }
                 exitFragment();
             }
         });
@@ -208,10 +223,10 @@ public class AlarmFragment extends Fragment {
             public void onClick(View view) {
                 if (mToggleVibrate.isChecked()) {
                     mToggleVibrate.setText(R.string.on);
-                    mAlarm.setVibrate(true);
+                    alarm.setVibrate(true);
                 } else {
                     mToggleVibrate.setText(R.string.off);
-                    mAlarm.setVibrate(false);
+                    alarm.setVibrate(false);
                 }
             }
         });
@@ -221,10 +236,10 @@ public class AlarmFragment extends Fragment {
             public void onClick(View view) {
                 if (mToggleSnooze.isChecked()) {
                     mToggleSnooze.setText(R.string.on);
-                    mAlarm.setSnooze(true);
+                    alarm.setSnooze(true);
                 } else {
                     mToggleSnooze.setText(R.string.off);
-                    mAlarm.setSnooze(false);
+                    alarm.setSnooze(false);
                 }
             }
         });
@@ -233,31 +248,31 @@ public class AlarmFragment extends Fragment {
     }
 
     private void updateAlarmDays() {
+        // All alarms days of specific alarm.
+        List<String> days = mViewModel.getDays(alarm.getId()).getValue();
+
+        // For loop through all chips in layout.
         for (int i = 0; i < mChips.getChildCount(); i++) {
-            if (((Chip)mChips.getChildAt(i)).isChecked()) {
+            Chip chip = (Chip)mChips.getChildAt(i);
+
+            // Adds new day to alarm if clicked day is not there already.
+            boolean condition = days != null ? !days.contains(chip.getText().toString()):isNewAlarm;
+            if (chip.isChecked() && condition) {
                 AlarmDay day = new AlarmDay();
                 String text = ((Chip) mChips.getChildAt(i)).getText().toString();
-                day.setId(mAlarm.getId());
+                day.setAlarmId(alarm.getId());
                 day.setDay(getDayInt(text));
                 day.setDayName(text);
                 mViewModel.addAlarmDay(day);
             }
+
+            // This deletes an alarm day since day is no longer selected.
+            else if (!chip.isChecked() && !isNewAlarm && days.contains(chip.getText().toString())) {
+                mViewModel.deleteDay(alarm.getId(), chip.getText().toString());
+            }
         }
     }
 
-    private void updateAlarmTime() {
-        mViewModel.addAlarm(mAlarm);
-        AlarmTime time = new AlarmTime();
-        time.setId(mAlarm.getId());
-        if (Build.VERSION.SDK_INT < 23) {
-            time.setHour(mTime.getCurrentHour());
-            time.setMinute(mTime.getCurrentMinute());
-        } else {
-            time.setHour(mTime.getHour());
-            time.setMinute(mTime.getMinute());
-        }
-        mViewModel.addAlarmTime(time);
-    }
 
     private void exitFragment() {
         getActivity().getSupportFragmentManager().beginTransaction().remove(this).commit();
@@ -299,7 +314,7 @@ public class AlarmFragment extends Fragment {
             String alarmSound = RingtoneManager.getRingtone(getActivity(), soundUri)
                     .getTitle(getActivity());
             mAlarmSound.setText(alarmSound);
-            mAlarm.setAlarmSound(alarmSound);
+            alarm.setAlarmSound(alarmSound);
         }
     }
 

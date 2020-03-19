@@ -24,6 +24,7 @@ public class Alarm {
     private boolean mVibrate;
     @ColumnInfo(typeAffinity = ColumnInfo.INTEGER)
     private boolean mSnooze;
+    private Date mTime;
 
 
     public String getName() {
@@ -65,5 +66,13 @@ public class Alarm {
 
     public void setSnooze(boolean snooze) {
         mSnooze = snooze;
+    }
+
+    public Date getTime() {
+        return mTime;
+    }
+
+    public void setTime(Date time) {
+        mTime = time;
     }
 }

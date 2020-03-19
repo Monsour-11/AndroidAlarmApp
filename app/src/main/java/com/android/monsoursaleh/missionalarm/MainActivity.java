@@ -49,23 +49,18 @@ public class MainActivity extends AppCompatActivity {
             public void onChanged(List<Alarm> alarms) {
                 // Update the adapter of the recycler view.
                 mAdapter.updateAlarmsList(alarms);
-            }
-        });
-
-        // Set observer on alarm times and days.
-        mViewModel.getAlarmTimes().observe(this, new Observer<List<AlarmTime>>() {
-            @Override
-            public void onChanged(List<AlarmTime> alarmTimes) {
                 mAdapter.notifyDataSetChanged();
             }
         });
 
-        mViewModel.getAlarmDays().observe(this, new Observer<List<AlarmDay>>() {
-            @Override
-            public void onChanged(List<AlarmDay> alarmDays) {
-                mAdapter.notifyDataSetChanged();
-            }
-        });
+        // Set observer on alarm days.
+       mViewModel.getAlarmDays().observe(this, new Observer<List<String>>() {
+           @Override
+           public void onChanged(List<String> strings) {
+               // Update the adapter of the recycler view.
+               mAdapter.notifyDataSetChanged();
+           }
+       });
 
         // Get TabLayout and set listener for when tabs are clicked.
         ActivityMainBinding binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
@@ -133,8 +128,11 @@ public class MainActivity extends AppCompatActivity {
         private SwitchMaterial mSwitch;
 
         AlarmHolder(LayoutInflater inflater, ViewGroup parent, int viewType) {
+            // This calls the constructor for parent class.
             super(DataBindingUtil.inflate(inflater, viewType,
                     parent, false).getRoot());
+
+            // Get the components from the layout.
             mAlarmTime = itemView.findViewById(R.id.alarm_time);
             mAlarmTitle = itemView.findViewById(R.id.alarm_label);
             mAlarmDays = itemView.findViewById(R.id.alarm_days);
@@ -143,8 +141,7 @@ public class MainActivity extends AppCompatActivity {
 
         public void bind(Alarm alarm) {
             mAlarmTime.setText(DateFormat.getTimeInstance()
-                    .format(AlarmsHelper.toDate(mViewModel
-                            .getAlarmTime(alarm.getId()).getValue())));
+                    .format(mViewModel.getAlarm(alarm.getName()).getValue().getTime()));
             mAlarmTitle.setText(alarm.getName());
             mSwitch.setChecked(true);
             String DaysText = "";
@@ -174,7 +171,6 @@ public class MainActivity extends AppCompatActivity {
         // Updates alarms list whenever there is a change.
         public void updateAlarmsList(List<Alarm> updatedAlarms) {
             mAlarms = updatedAlarms;
-            mAdapter.notifyDataSetChanged();
         }
 
         // Creates an Alarm Holder to hold a new alarm.

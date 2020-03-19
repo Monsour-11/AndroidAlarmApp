@@ -8,11 +8,12 @@ import androidx.room.PrimaryKey;
 
 @Entity(tableName = "days_table")
 public class AlarmDay {
-    @PrimaryKey
-    @ForeignKey(entity = AlarmTime.class, parentColumns = "id", childColumns = "id",
-            onDelete = ForeignKey.CASCADE, onUpdate = ForeignKey.CASCADE)
+    @PrimaryKey(autoGenerate = true)
     private int id;
     private int mDay;
+    @ForeignKey(entity = Alarm.class, parentColumns = "id", childColumns = "mAlarmId",
+                onDelete = ForeignKey.CASCADE, onUpdate = ForeignKey.CASCADE)
+    private int mAlarmId;
     private String mDayName;
 
     public int getDay() {
@@ -37,5 +38,13 @@ public class AlarmDay {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public int getAlarmId() {
+        return mAlarmId;
+    }
+
+    public void setAlarmId(int alarmId) {
+        mAlarmId = alarmId;
     }
 }

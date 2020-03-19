@@ -6,8 +6,8 @@ import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
-@Database(entities = {Alarm.class, AlarmTime.class, AlarmTimeEnd.class, AlarmDay.class},
-        version = 1)
+@Database(entities = {Alarm.class, AlarmTimeEnd.class, AlarmDay.class},
+        version = 3)
 @TypeConverters({DateConverter.class})
 public abstract class AlarmDatabase extends RoomDatabase {
     private static AlarmDatabase sAlarmDatabase;
@@ -21,7 +21,7 @@ public abstract class AlarmDatabase extends RoomDatabase {
                             Room.databaseBuilder(
                             context,
                             AlarmDatabase.class,
-                            "alarm_database").build();
+                            "alarm_database").fallbackToDestructiveMigration().build();
                 }
             }
         }
