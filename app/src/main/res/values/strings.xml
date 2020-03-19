@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">MissionAlarm</string>
+    <string name="next_alarm">Next Alarm</string>
+    <string name="hint_label">Label</string>
+    <string name="hint_alarm_shut">Alarm Shut Task</string>
+    <string name="hint_days">Days</string>
+    <string name="hint_alarm_sound">Alarm Sound</string>
+    <string name="des_volume">Increase or decrease volume</string>
+    <string name="des_play_alarm">Play alarm</string>
+    <string name="hint_snooze">Snooze</string>
+    <string name="hint_vibrate">Vibrate</string>
+    <string name="off">Off</string>
+    <string name="on">On</string>
+    <string name="none">None</string>
+    <string name="shake_task_description">Shake your phone for a certain number of times.</string>
+    <string name="math_task_description">Complete math problems in order to shut alarm.</string>
+    <string name="cards_task_description">Study a set of index cards.</string>
+    <string name="barcode_task_description">Choose a barcode to scan in order to shut alarm.</string>
+    <string name="walk_task_description">walk a certain amount of steps.</string>
+    <string name="article_task_description">Read an article that will be given to you.</string>
+    <string name="default_task_description">No task chosen.</string>
+    <string name="delete">Delete</string>
+</resources>
