@@ -7,6 +7,7 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,6 +25,8 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelProviders;
+import androidx.lifecycle.ViewModelStoreOwner;
+
 import com.android.monsoursaleh.missionalarm.databinding.FragmentAlarmBinding;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
@@ -35,6 +38,7 @@ import java.util.Date;
 import java.util.List;
 
 public class AlarmFragment extends Fragment {
+    private static final String TAG_ALARM_FRAG = "AlarmFragment";
     private static final int REQUEST_ALARM_SOUND = 0;
     private static final String ARG_ALARM_NAME = "ARG_ALARM_NAME";
     private Alarm alarm;
@@ -59,7 +63,7 @@ public class AlarmFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         // Get reference to view model.
-        mViewModel = ViewModelProviders.of(this).get(AlarmsViewModel.class);
+        mViewModel = (new ViewModelProvider(this)).get(AlarmsViewModel.class);
 
         // If an existing alarm was clicked from the list.
         if (getArguments() != null) {
@@ -103,6 +107,7 @@ public class AlarmFragment extends Fragment {
         FragmentAlarmBinding binding = DataBindingUtil
                 .inflate(inflater, R.layout.fragment_alarm,
                         parent, false);
+        binding.setLifecycleOwner(this);
 
         // Get all fields required for alarm.
         mTime = binding.timePicker;
@@ -176,17 +181,19 @@ public class AlarmFragment extends Fragment {
                 /* save alarm to database and
                 go back to previous activity.
                  */
+                Log.i(TAG_ALARM_FRAG, "OK button clicked saving alarm...");
                 alarm.setName(mName.getText().toString());
+                Calendar time = Calendar.getInstance();
 
-                // Do database operations in separate thread.
-                new Thread(new Runnable() {
-                   @Override
-                   public void run() {
-                       updateAlarmDays();
-                       mViewModel.saveAlarm(alarm);
-                   }
-               }).start();
+                time.set(Calendar.HOUR_OF_DAY, Build.VERSION.SDK_INT < 23 ?
+                        mTime.getCurrentHour(): mTime.getHour());
 
+                time.set(Calendar.MINUTE, Build.VERSION.SDK_INT < 23 ?
+                        mTime.getCurrentMinute(): mTime.getMinute());
+
+                alarm.setTime(time.getTime());
+                updateAlarmDays();
+                mViewModel.saveAlarm(alarm);
                exitFragment();
             }
         });
@@ -196,12 +203,7 @@ public class AlarmFragment extends Fragment {
             public void onClick(View view) {
                 // Delete alarm from database.
                 if (!isNewAlarm) {
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            mViewModel.deleteAlarm(alarm);
-                        }
-                    }).start();
+                   mViewModel.deleteAlarm(alarm);
                 }
                 exitFragment();
             }
@@ -275,6 +277,7 @@ public class AlarmFragment extends Fragment {
 
 
     private void exitFragment() {
+        Log.i(TAG_ALARM_FRAG, "Leaving Alarm Fragment");
         getActivity().getSupportFragmentManager().beginTransaction().remove(this).commit();
     }
 

@@ -1,17 +1,15 @@
 package com.android.monsoursaleh.missionalarm;
 
-import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-
 import com.android.monsoursaleh.missionalarm.databinding.ActivityMainBinding;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.android.material.tabs.TabLayout;
-
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -19,16 +17,19 @@ import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelProviders;
+import androidx.lifecycle.ViewModelStore;
+import androidx.lifecycle.ViewModelStoreOwner;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import java.security.Provider;
 import java.text.DateFormat;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ViewModelStoreOwner{
+    private static final String TAG_MAIN_ACTIVITY = "MainActivity";
     private AlarmsViewModel mViewModel;
     private RecyclerView mRecyclerView;
     private AlarmAdapter mAdapter;
@@ -40,8 +41,14 @@ public class MainActivity extends AppCompatActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Get TabLayout and set listener for when tabs are clicked.
+        ActivityMainBinding binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
+
+        // The life cycle owner or activity where this view is in.
+        binding.setLifecycleOwner(this);
+
         // Get view model
-        mViewModel = ViewModelProviders.of(this).get(AlarmsViewModel.class);
+        mViewModel = (new ViewModelProvider(this)).get(AlarmsViewModel.class);
 
         // Set observer on list of alarms.
         mViewModel.getAlarms().observe(this, new Observer<List<Alarm>>() {
@@ -50,6 +57,9 @@ public class MainActivity extends AppCompatActivity {
                 // Update the adapter of the recycler view.
                 mAdapter.updateAlarmsList(alarms);
                 mAdapter.notifyDataSetChanged();
+                Log.i(TAG_MAIN_ACTIVITY, "Alarms Observer called");
+                Log.i(TAG_MAIN_ACTIVITY, "First element in Alarms: " + (!alarms.isEmpty() ?
+                        alarms.get(0).getName(): "null"));
             }
         });
 
@@ -59,11 +69,11 @@ public class MainActivity extends AppCompatActivity {
            public void onChanged(List<String> strings) {
                // Update the adapter of the recycler view.
                mAdapter.notifyDataSetChanged();
+               Log.i(TAG_MAIN_ACTIVITY, "Days Observed called");
+               Log.i(TAG_MAIN_ACTIVITY, "First Days element: " + (!strings.isEmpty() ?
+                       strings.get(0): "null"));
            }
        });
-
-        // Get TabLayout and set listener for when tabs are clicked.
-        ActivityMainBinding binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
 
         // Get recycler view, set adapter, and layout manager.
         mRecyclerView = binding.recyclerView;
@@ -103,6 +113,12 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    @NonNull
+    public ViewModelStore getViewModelStore() {
+        return new ViewModelStore();
+    }
+
 
 
     private void putFragment(Fragment fragment) {
@@ -128,9 +144,8 @@ public class MainActivity extends AppCompatActivity {
         private SwitchMaterial mSwitch;
 
         AlarmHolder(LayoutInflater inflater, ViewGroup parent, int viewType) {
-            // This calls the constructor for parent class.
-            super(DataBindingUtil.inflate(inflater, viewType,
-                    parent, false).getRoot());
+            // This calls the constructor for parent class passing in layout view.
+            super(DataBindingUtil.inflate(inflater, viewType, parent, false).getRoot());
 
             // Get the components from the layout.
             mAlarmTime = itemView.findViewById(R.id.alarm_time);
@@ -139,16 +154,17 @@ public class MainActivity extends AppCompatActivity {
             mSwitch = itemView.findViewById(R.id.toggle_alarm);
         }
 
-        public void bind(Alarm alarm) {
+        public void bind(Alarm alarm) throws ExecutionException, InterruptedException {
             mAlarmTime.setText(DateFormat.getTimeInstance()
-                    .format(mViewModel.getAlarm(alarm.getName()).getValue().getTime()));
+                    .format(alarm.getTime()));
             mAlarmTitle.setText(alarm.getName());
             mSwitch.setChecked(true);
             String DaysText = "";
-            for (String day : mViewModel.getDays(alarm.getId()).getValue()) {
+            for (String day : mViewModel.getDaysList(alarm.getId())) {
                 DaysText.concat(day.substring(0, 3) + " ");
             }
             mAlarmDays.setText(DaysText);
+            Log.i(TAG_MAIN_ACTIVITY, "ViewHolder bind to recycler view");
         }
 
         public void onClick(View v) {
@@ -162,7 +178,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // Adapter for alarms.
-    private class AlarmAdapter extends RecyclerView.Adapter<AlarmHolder> {
+    public class AlarmAdapter extends RecyclerView.Adapter<AlarmHolder> {
         private List<Alarm> mAlarms;
         public AlarmAdapter(List<Alarm> alarms) {
             mAlarms = alarms;
@@ -171,18 +187,25 @@ public class MainActivity extends AppCompatActivity {
         // Updates alarms list whenever there is a change.
         public void updateAlarmsList(List<Alarm> updatedAlarms) {
             mAlarms = updatedAlarms;
+            Log.i(TAG_MAIN_ACTIVITY, "Updated adapter alarms list");
         }
 
         // Creates an Alarm Holder to hold a new alarm.
         @NonNull
         @Override
         public AlarmHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            return new AlarmHolder(getLayoutInflater(), parent, viewType);
+            Log.i(TAG_MAIN_ACTIVITY, "onCreateViewHolder called");
+            return new AlarmHolder(LayoutInflater.from(getApplicationContext()),
+                    parent, R.layout.alarm_item);
         }
 
         @Override
         public void onBindViewHolder(@NonNull AlarmHolder holder, int position) {
-            holder.bind(mAlarms.get(position));
+            try {
+                holder.bind(mAlarms.get(position));
+            } catch (ExecutionException | InterruptedException e) {
+                e.printStackTrace();
+            }
         }
 
         @Override

@@ -10,11 +10,12 @@ import androidx.lifecycle.Observer;
 
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public class AlarmsViewModel extends AndroidViewModel {
     private AlarmRepository mRepository;
-    private MutableLiveData<List<Alarm>> mAlarms;
-    private MutableLiveData<List<String>> mDays;
+    private LiveData<List<Alarm>> mAlarms;
+    private LiveData<List<String>> mDays;
 
     public AlarmsViewModel(Application application) {
         super(application);
@@ -24,23 +25,17 @@ public class AlarmsViewModel extends AndroidViewModel {
                         .getApplicationContext());
 
         // Set the alarms list variable.
-        mAlarms = new MutableLiveData<>();
-        mAlarms.setValue(mRepository.getAlarms().getValue());
-        mDays = new MutableLiveData<>();
-        mDays.setValue(mRepository.getAllDays().getValue());
+        mAlarms = mRepository.getAlarms();
+        mDays = mRepository.getAllDays();
     }
 
     public void saveAlarm(Alarm alarm) {
         mRepository.addAlarm(alarm);
-        mAlarms.postValue(mRepository.getAlarms().getValue());
-        mDays.postValue(mRepository.getAllDays().getValue());
     }
 
 
     public void addAlarmDay(AlarmDay day) {
         mRepository.putAlarmDay(day);
-        mAlarms.postValue(mRepository.getAlarms().getValue());
-        mDays.postValue(mRepository.getAllDays().getValue());
     }
 
     public LiveData<List<Alarm>> getAlarms() {
@@ -60,17 +55,18 @@ public class AlarmsViewModel extends AndroidViewModel {
         return mRepository.getDays(id);
     }
 
+    public List<String> getDaysList(int id) throws ExecutionException, InterruptedException {
+        return mRepository.getDaysList(id);
+    }
+
 
     public void deleteAlarm(Alarm alarm) {
         mRepository.deleteAlarm(alarm);
-        mAlarms.postValue(mRepository.getAlarms().getValue());
-        mDays.postValue(mRepository.getAllDays().getValue());
     }
 
 
     public void deleteDay(int id, String day) {
         // Update Alarm days from alarm with certain given id.
         mRepository.deleteDay(id, day);
-        mDays.postValue(mRepository.getAllDays().getValue());
     }
 }

@@ -42,6 +42,9 @@ public interface AlarmDao {
     @Query("DELETE FROM days_table WHERE mAlarmId = :id AND mDayName = :day")
     void deleteDay(int id, String day);
 
+    @Query("SELECT mDayName FROM days_table WHERE mAlarmId = :id")
+    List<String> getDaysList(int id);
+
     // Insert an alarm
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void putAlarm(Alarm alarm);

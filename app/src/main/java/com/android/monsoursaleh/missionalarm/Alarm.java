@@ -1,8 +1,10 @@
 package com.android.monsoursaleh.missionalarm;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
@@ -19,12 +21,14 @@ public class Alarm {
     private String mName;
     @PrimaryKey(autoGenerate = true)
     private int mId;
-    private String mAlarmSound;
+    @NonNull
+    private String mAlarmSound = "Silent";
     @ColumnInfo(typeAffinity = ColumnInfo.INTEGER)
     private boolean mVibrate;
     @ColumnInfo(typeAffinity = ColumnInfo.INTEGER)
     private boolean mSnooze;
-    private Date mTime;
+    @NonNull
+    private Date mTime = Calendar.getInstance().getTime();
 
 
     public String getName() {
@@ -43,12 +47,12 @@ public class Alarm {
         mId = id;
     }
 
-
+    @NonNull
     public String getAlarmSound() {
         return mAlarmSound;
     }
 
-    public void setAlarmSound(String alarmSound) {
+    public void setAlarmSound(@NonNull String alarmSound) {
         mAlarmSound = alarmSound;
     }
 
@@ -68,11 +72,12 @@ public class Alarm {
         mSnooze = snooze;
     }
 
+    @NonNull
     public Date getTime() {
         return mTime;
     }
 
-    public void setTime(Date time) {
+    public void setTime(@NonNull Date time) {
         mTime = time;
     }
 }
