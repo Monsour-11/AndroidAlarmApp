@@ -5,6 +5,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 import com.android.monsoursaleh.missionalarm.databinding.ActivityMainBinding;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -80,6 +81,9 @@ public class MainActivity extends AppCompatActivity implements ViewModelStoreOwn
         mAdapter = new AlarmAdapter(mViewModel.getAlarms().getValue());
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        RecyclerView.ItemDecoration itemDecoration = new RecyclerViewItemDecor(
+                getResources().getDrawable(R.drawable.divider));
+        mRecyclerView.addItemDecoration(itemDecoration);
         mToolbar = binding.toolbar;
         mTabLayout = binding.tabs;
         mButton = binding.addAlarmButton;
@@ -142,6 +146,7 @@ public class MainActivity extends AppCompatActivity implements ViewModelStoreOwn
         private TextView mAlarmTime;
         private TextView mAlarmDays;
         private SwitchMaterial mSwitch;
+        private FrameLayout mItemView;
 
         AlarmHolder(LayoutInflater inflater, ViewGroup parent, int viewType) {
             // This calls the constructor for parent class passing in layout view.
@@ -152,6 +157,7 @@ public class MainActivity extends AppCompatActivity implements ViewModelStoreOwn
             mAlarmTitle = itemView.findViewById(R.id.alarm_label);
             mAlarmDays = itemView.findViewById(R.id.alarm_days);
             mSwitch = itemView.findViewById(R.id.toggle_alarm);
+            mItemView = itemView.findViewById(R.id.alarm_item_view);
         }
 
         public void bind(Alarm alarm) throws ExecutionException, InterruptedException {

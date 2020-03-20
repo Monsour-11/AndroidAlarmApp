@@ -4,18 +4,27 @@
     xmlns:tools="http://schemas.android.com/tools" >
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:background="@color/colorSecondary"
+        android:id="@+id/alarm_item_view">
 
         <com.google.android.material.switchmaterial.SwitchMaterial
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:id="@+id/toggle_alarm"/>
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end|center_vertical"
+            android:paddingEnd="8dp"
+            android:paddingStart="8dp"
+            android:id="@+id/toggle_alarm"
+            android:checked="true"
+            android:theme="@style/Theme.MaterialComponents.Light"/>
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
             android:orientation="vertical"
-            android:layout_gravity="start">
+            android:layout_gravity="center_horizontal">
 
             <TextView
                 android:id="@+id/alarm_time"
@@ -43,21 +52,14 @@
         </LinearLayout>
 
         <TextView
-            android:id="@+id/alarm_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="18sp"
+            android:paddingEnd="8dp"
+            android:paddingStart="8dp"
             tools:text="Alarm Title"
-            android:layout_gravity="center"/>
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="@color/colorPrimary"
-            android:layout_gravity="bottom"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp"/>
-
+            android:layout_gravity="start|center_vertical"
+            android:textSize="16sp"
+            android:id="@+id/alarm_label"/>
 
     </FrameLayout>
 
