@@ -14,7 +14,6 @@
         <com.google.android.material.appbar.AppBarLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
             android:fitsSystemWindows="true"
             android:id="@+id/app_bar">
 
@@ -23,7 +22,6 @@
                 android:layout_height="?attr/actionBarSize"
                 app:layout_scrollFlags="noScroll"
                 android:id="@+id/toolbar"
-                app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
                 app:title="@string/next_alarm"/>
 
             <com.google.android.material.tabs.TabLayout
@@ -65,7 +63,6 @@
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|end"
             app:srcCompat="@drawable/ic_add_alarm_white_24dp"
-            style="@style/Widget.MaterialComponents.FloatingActionButton"
             android:layout_margin="16dp"
             android:id="@+id/add_alarm_button"
             android:contentDescription="@string/app_name" />
