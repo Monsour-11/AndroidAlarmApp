@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CompoundButton;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
@@ -28,13 +29,13 @@ import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.lifecycle.ViewModelStoreOwner;
-
 import com.android.monsoursaleh.missionalarm.databinding.FragmentAlarmBinding;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
+import java.text.DateFormat;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
@@ -100,43 +101,18 @@ public class AlarmFragment extends Fragment {
         // If an existing alarm was clicked from the list.
         if (getArguments() != null) {
             // Get the alarm that was clicked.
-            mViewModel.getAlarm(getArguments().getString(ARG_ALARM_NAME)).observe(getActivity(),
-                    new Observer<Alarm>() {
+            mViewModel.getAlarm(getArguments().getString(ARG_ALARM_NAME)).observe(
+                    getViewLifecycleOwner(), new Observer<Alarm>() {
                 @Override
                 public void onChanged(Alarm alarm) {
                     // Set alarm member variable.
                     mAlarm = alarm;
 
-                    // Inflate chips into Chip group with days of week.
-                    for (String day : getResources().getStringArray(R.array.days_of_week)) {
-                        // Add chip to chip group.
-                        Chip chip = new Chip(getActivity(), null,
-                                R.style.Widget_MaterialComponents_Chip_Filter);
+                    Log.i(TAG_ALARM_FRAG, "Filling in data from " + alarm.getName() + " alarm");
 
-                        ChipGroup.LayoutParams lp = new ChipGroup.LayoutParams
-                                (ChipGroup.LayoutParams.WRAP_CONTENT,
-                                        ChipGroup.LayoutParams.WRAP_CONTENT);
-                        chip.setText(day.substring(0, 3));
-                        chip.setId(View.generateViewId());
-                        chip.setLayoutParams(lp);
-                        chip.setClickable(true);
-                        chip.setCheckable(true);
-                        List<String> days = null;
-                        int id = alarm.getId();
-                        try {
-                            days = mViewModel.getDaysList(id);
-                        } catch (ExecutionException | InterruptedException e) {
-                            e.printStackTrace();
-                        }
-
-                        assert days != null;
-                        chip.setChecked(days.contains(day.substring(0, 3)));
-
-                        chip.setCheckedIconVisible(false);
-                        chip.setChipBackgroundColor(AppCompatResources
-                                .getColorStateList(getActivity(), R.color.chip_state));
-                        mChips.addView(chip);
-                    }
+                    // Instantiate chips based on days in database corresponding
+                    // to this alarm id.
+                    updateDayChips(alarm);
 
                     // Set state of UI elements.
                     mAlarmSound.setText(alarm.getAlarmSound());
@@ -165,6 +141,10 @@ public class AlarmFragment extends Fragment {
             // Create new Alarm object.
             isNewAlarm = true;
             mAlarm = new Alarm();
+            Log.i(TAG_ALARM_FRAG, "Creating a new Alarm");
+
+            // This instantiates the chips for choosing alarms days by default.
+            updateDayChips(mAlarm);
         }
 
 
@@ -195,9 +175,20 @@ public class AlarmFragment extends Fragment {
                 time.set(Calendar.MINUTE, Build.VERSION.SDK_INT < 23 ?
                         mTime.getCurrentMinute(): mTime.getMinute());
                 mAlarm.setTime(time.getTime());
-                updateAlarmDays();
+
+                // This try/catch is for handling exceptions that the function throws.
+                try {
+                    updateAlarmDays();
+                } catch (ExecutionException | InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                Log.i(TAG_ALARM_FRAG, "Saving the following alarm to database:\n" +
+                        "Name: " + mAlarm.getName() + ", " + "Time: " +
+                        DateFormat.getInstance().format(mAlarm.getTime()));
                 mViewModel.saveAlarm(mAlarm);
-               replaceFragment(AlarmsFragment.getInstance());
+
+                replaceFragment(AlarmsFragment.getInstance());
             }
         });
 
@@ -235,28 +226,26 @@ public class AlarmFragment extends Fragment {
             }
         });
 
-        mToggleVibrate.setOnClickListener(new View.OnClickListener() {
+        mToggleVibrate.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
-            public void onClick(View view) {
-                if (mToggleVibrate.isChecked()) {
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                mAlarm.setVibrate(b);
+                if (b) {
                     mToggleVibrate.setText(R.string.on);
-                    mAlarm.setVibrate(true);
                 } else {
                     mToggleVibrate.setText(R.string.off);
-                    mAlarm.setVibrate(false);
                 }
             }
         });
 
-        mToggleSnooze.setOnClickListener(new View.OnClickListener() {
+        mToggleSnooze.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
-            public void onClick(View view) {
-                if (mToggleSnooze.isChecked()) {
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                mAlarm.setSnooze(b);
+                if (b) {
                     mToggleSnooze.setText(R.string.on);
-                    mAlarm.setSnooze(true);
                 } else {
                     mToggleSnooze.setText(R.string.off);
-                    mAlarm.setSnooze(false);
                 }
             }
         });
@@ -264,36 +253,90 @@ public class AlarmFragment extends Fragment {
         return binding.getRoot();
     }
 
-    private void updateAlarmDays() {
+    private void updateDayChips(Alarm alarm) {
+        // Inflate chips into Chip group with days of week.
+        for (String day : getResources().getStringArray(R.array.days_of_week)) {
+            // Add chip to chip group.
+            Chip chip = new Chip(getActivity(), null,
+                    R.style.Widget_MaterialComponents_Chip_Filter);
+
+            ChipGroup.LayoutParams lp = new ChipGroup.LayoutParams
+                    (ChipGroup.LayoutParams.WRAP_CONTENT,
+                            ChipGroup.LayoutParams.WRAP_CONTENT);
+            chip.setText(day.substring(0, 3));
+            chip.setId(View.generateViewId());
+            chip.setLayoutParams(lp);
+            chip.setClickable(true);
+            chip.setCheckable(true);
+            chip.setCheckedIconVisible(false);
+            chip.setChipBackgroundColor(AppCompatResources
+                    .getColorStateList(getActivity(), R.color.chip_state));
+            List<String> days = null;
+
+            if (!isNewAlarm) {
+                try {
+                    days = mViewModel.getDaysList(alarm.getId());
+                } catch (ExecutionException | InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                assert days != null;
+
+                chip.setChecked(days.contains(day.substring(0, 3)));
+                Log.i(TAG_ALARM_FRAG, String.format("Check %s chip = %b",
+                        day.substring(0, 3), days.contains(day.substring(0,3 ))));
+            }
+
+            else {
+                Log.i(TAG_ALARM_FRAG, "Default instantiation of chip days");
+                chip.setChecked(true);
+            }
+            mChips.addView(chip);
+        }
+    }
+
+    private void updateAlarmDays() throws ExecutionException, InterruptedException {
         // All alarms days of specific alarm.
-        List<String> days = mViewModel.getDays(mAlarm.getId()).getValue();
+        List<String> days;
+
+        if (!isNewAlarm) {
+            // Get the list of days if this is not a newly created alarm.
+            days = mViewModel.getDaysList(mAlarm.getId());
+        } else {
+            days = null;
+        }
 
         // For loop through all chips in layout.
         for (int i = 0; i < mChips.getChildCount(); i++) {
             Chip chip = (Chip)mChips.getChildAt(i);
+            String text = chip.getText().toString();
 
-            // Adds new day to alarm if clicked day is not there already.
-            boolean dayNotFound = days != null && !days.contains(chip.getText().toString());
-            if (chip.isChecked() && dayNotFound) {
+            Log.i(TAG_ALARM_FRAG, String.format("Chip %s checked = %b, " +
+                    "isNewAlarm = %b, !days.contains(%s) = %b", text, chip.isChecked(), isNewAlarm,
+                    text, days != null && !days.contains(text)));
+
+            // If a chip is checked and this is a new alarm, then add it to the days list.
+            // If this is not a new alarm, then add a new day if this day is not in the
+            // days list that corresponds with the alarm id.
+            if ((chip.isChecked() && isNewAlarm) ||
+                    chip.isChecked() && days != null && !days.contains(text)) {
+                Log.i(TAG_ALARM_FRAG, "Adding " + text + " to alarm days for " +
+                        mAlarm.getName() + " alarm.");
                 AlarmDay day = new AlarmDay();
-                String text = ((Chip) mChips.getChildAt(i)).getText().toString();
                 day.setAlarmId(mAlarm.getId());
                 day.setDay(getDayInt(text));
                 day.setDayName(text);
                 mViewModel.addAlarmDay(day);
             }
 
-            // This deletes an alarm day since day is no longer selected.
-            else if (!chip.isChecked() && days != null && days.contains(chip.getText().toString())) {
+            // If a chip is in days list and it is no longer selected, then delete it.
+            // This only applies for alarms that are not new.
+            else if (!chip.isChecked() && days != null && days.contains(text)) {
+                Log.i(TAG_ALARM_FRAG, "Deleting " + text + " from alarm days for " +
+                        mAlarm.getName() + " alarm");
                 mViewModel.deleteDay(mAlarm.getId(), chip.getText().toString());
             }
         }
-    }
-
-
-    private void exitFragment() {
-        Log.i(TAG_ALARM_FRAG, "Leaving Alarm Fragment");
-        getActivity().getSupportFragmentManager().beginTransaction().remove(this).commit();
     }
 
     private int getDayInt(String dayName) {
@@ -327,6 +370,7 @@ public class AlarmFragment extends Fragment {
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        // If the request was to get data about the ringtone the user chose.
         if (requestCode == REQUEST_ALARM_SOUND) {
             Uri soundUri = data.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI);
             String alarmSound = RingtoneManager.getRingtone(getActivity(), soundUri)
@@ -347,7 +391,6 @@ public class AlarmFragment extends Fragment {
         // Add current fragment to back stack so that when back button is
         // pressed, it will go back to alarms fragment.
         getActivity().getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, fragment)
-                .addToBackStack(null).commit();
+                .replace(R.id.fragment_container, fragment).commit();
     }
 }

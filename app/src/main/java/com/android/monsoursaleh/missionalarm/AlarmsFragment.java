@@ -1,6 +1,7 @@
 package com.android.monsoursaleh.missionalarm;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,6 +25,7 @@ import java.util.concurrent.ExecutionException;
 import com.google.android.material.appbar.AppBarLayout;
 
 public class AlarmsFragment extends Fragment {
+    private final static String TAG_ALARMS_FRAG = "AlarmsFragment";
     private AlarmsViewModel mViewModel;
     private RecyclerView mRecyclerView;
     private AlarmAdapter mAdapter;
@@ -47,6 +49,13 @@ public class AlarmsFragment extends Fragment {
             @Override
             public void onChanged(List<Alarm> alarms) {
                 // Update the adapter of the recycler view.
+                if (alarms != null) {
+                    Log.i(TAG_ALARMS_FRAG, "Update Alarms List: \n");
+                    for (Alarm alarm : alarms) {
+                        Log.i(TAG_ALARMS_FRAG, alarm.getId() + ", " + alarm.getName() + ", " +
+                                DateFormat.getInstance().format(alarm.getTime()) + "\n");
+                    }
+                }
                 mAdapter.updateAlarmsList(alarms);
                 mAdapter.notifyDataSetChanged();
             }
@@ -58,9 +67,11 @@ public class AlarmsFragment extends Fragment {
             public void onChanged(List<String> strings) {
                 // Update the adapter of the recycler view.
                 mAdapter.notifyDataSetChanged();
+                if (strings != null) {
+                    Log.i(TAG_ALARMS_FRAG, "Days list updated");
+                }
             }
         });
-
     }
 
     @Override
@@ -161,6 +172,9 @@ public class AlarmsFragment extends Fragment {
                     Bundle args = new Bundle();
                     args.putString("ARG_ALARM_NAME", mAlarmTitle.getText().toString());
                     alarmFragment.setArguments(args);
+
+                    Log.i(TAG_ALARMS_FRAG, "Alarm of name = " +
+                            mAlarmTitle.getText().toString() + " clicked");
 
                     // Replace current fragment with an alarm fragment.
                     replaceFragment(alarmFragment);

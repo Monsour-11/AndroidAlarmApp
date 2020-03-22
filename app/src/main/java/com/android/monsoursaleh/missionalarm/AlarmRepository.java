@@ -135,6 +135,8 @@ public class AlarmRepository {
 
         @Override
         protected Void doInBackground(String... day) {
+            Log.i(TAG_REPO, String.format("Deleting day %s alarmId = %d",
+                    day[1], Integer.parseInt(day[0])));
             mAsyncDao.deleteDay(Integer.parseInt(day[0]), day[1]);
             return null;
         }
