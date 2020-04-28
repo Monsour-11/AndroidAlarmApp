@@ -115,7 +115,7 @@ public class AlarmFragment extends Fragment {
                     updateDayChips(alarm);
 
                     // Set state of UI elements.
-                    mAlarmSound.setText(alarm.getAlarmSound());
+                    mAlarmSound.setText(alarm.getRingtone());
                     mToggleSnooze.setChecked(alarm.isSnooze());
                     mToggleVibrate.setChecked(alarm.isVibrate());
                     mName.setText(alarm.getName());
@@ -187,7 +187,7 @@ public class AlarmFragment extends Fragment {
                         "Name: " + mAlarm.getName() + ", " + "Time: " +
                         DateFormat.getInstance().format(mAlarm.getTime()));
                 mViewModel.saveAlarm(mAlarm);
-
+                AlarmReceiver.setAlarm(getActivity(), mAlarm.getAlarmSound());
                 replaceFragment(AlarmsFragment.getInstance());
             }
         });
@@ -376,7 +376,8 @@ public class AlarmFragment extends Fragment {
             String alarmSound = RingtoneManager.getRingtone(getActivity(), soundUri)
                     .getTitle(getActivity());
             mAlarmSound.setText(alarmSound);
-            mAlarm.setAlarmSound(alarmSound);
+            mAlarm.setRingtone(alarmSound);
+            mAlarm.setAlarmSound(soundUri);
         }
     }
 

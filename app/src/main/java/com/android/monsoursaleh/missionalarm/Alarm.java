@@ -1,5 +1,8 @@
 package com.android.monsoursaleh.missionalarm;
 
+import android.net.Uri;
+
+import java.net.URI;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -16,13 +19,13 @@ import androidx.room.TypeConverters;
     can be accessed by the user and changed.
  */
 @Entity(tableName = "alarm_table")
-@TypeConverters({DateConverter.class})
+@TypeConverters({DateConverter.class, UriConverter.class})
 public class Alarm {
     private String mName;
     @PrimaryKey(autoGenerate = true)
     private int mId;
-    @NonNull
-    private String mAlarmSound = "Silent";
+    private Uri mAlarmSound;
+    private String mRingtone;
     @ColumnInfo(typeAffinity = ColumnInfo.INTEGER)
     private boolean mVibrate;
     @ColumnInfo(typeAffinity = ColumnInfo.INTEGER)
@@ -48,11 +51,11 @@ public class Alarm {
     }
 
     @NonNull
-    public String getAlarmSound() {
+    public Uri getAlarmSound() {
         return mAlarmSound;
     }
 
-    public void setAlarmSound(@NonNull String alarmSound) {
+    public void setAlarmSound(@NonNull Uri alarmSound) {
         mAlarmSound = alarmSound;
     }
 
@@ -79,5 +82,13 @@ public class Alarm {
 
     public void setTime(@NonNull Date time) {
         mTime = time;
+    }
+
+    public String getRingtone() {
+        return mRingtone;
+    }
+
+    public void setRingtone(String ringtone) {
+        mRingtone = ringtone;
     }
 }

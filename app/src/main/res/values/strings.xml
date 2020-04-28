@@ -20,4 +20,5 @@
     <string name="article_task_description">Read an article that will be given to you.</string>
     <string name="default_task_description">No task chosen.</string>
     <string name="delete">Delete</string>
+    <string name="alarm_off">Shut Alarm</string>
 </resources>

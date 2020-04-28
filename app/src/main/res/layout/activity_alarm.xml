@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:text="# of steps"
+        android:layout_gravity="center"
+        android:id="@+id/steps_counter"
+        android:textSize="36sp"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/alarm_off"
+        android:layout_gravity="bottom|center"
+        android:id="@+id/shut_alarm"
+        android:textColor="@color/design_default_color_surface"/>
+
+</FrameLayout>

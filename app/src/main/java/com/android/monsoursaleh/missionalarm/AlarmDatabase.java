@@ -7,10 +7,11 @@ import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
 @Database(entities = {Alarm.class, AlarmTimeEnd.class, AlarmDay.class},
-        version = 4)
-@TypeConverters({DateConverter.class})
+        version = 6)
+@TypeConverters({DateConverter.class, UriConverter.class})
 public abstract class AlarmDatabase extends RoomDatabase {
     private static AlarmDatabase sAlarmDatabase;
+
     public abstract AlarmDao alarmDao();
 
     public static AlarmDatabase getDatabase(final Context context) {
